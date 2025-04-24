@@ -114,6 +114,39 @@ To manually warm up the cache:
 
 The caching process is automatically triggered when the application boots in production mode.
 
+## Laravel Horizon
+
+This project includes [Laravel Horizon](https://laravel.com/docs/horizon) for managing and monitoring Laravel Redis queues.
+
+### Running Horizon
+
+To start the Horizon process:
+
+```bash
+./vendor/bin/sail artisan horizon
+```
+
+Or if you're using the alias:
+
+```bash
+sail artisan horizon
+```
+
+### Horizon Dashboard
+
+The Horizon dashboard is available at `/horizon` and provides a beautiful interface for monitoring:
+
+- Job metrics
+- Failed jobs
+- Queue workload
+- Process counts
+- Job throughput
+- Recent jobs
+
+### Horizon Configuration
+
+The Horizon configuration is located in `config/horizon.php`. You can customize the queues, workers, and other settings in this file.
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
