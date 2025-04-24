@@ -69,6 +69,51 @@ or at http://localhost:8000 when running with Laravel Octane.
 
 Database credentials are in the .env file.
 
+## Conventional Commits
+
+This project follows the [Conventional Commits](https://www.conventionalcommits.org/) specification for commit messages. This helps to create an explicit commit history and automate versioning and release notes.
+
+### Commit Message Format
+
+Each commit message consists of a **header**, a **body**, and a **footer**:
+
+```
+<type>(<scope>): <description>
+
+<body>
+
+<footer>
+```
+
+The **header** is mandatory and must conform to the commit message format.
+The **body** and **footer** are optional.
+
+### Types
+
+- `feat`: A new feature
+- `fix`: A bug fix
+- `docs`: Documentation only changes
+- `style`: Changes that do not affect the meaning of the code (white-space, formatting, etc)
+- `refactor`: A code change that neither fixes a bug nor adds a feature
+- `perf`: A code change that improves performance
+- `test`: Adding missing tests or correcting existing tests
+- `build`: Changes that affect the build system or external dependencies
+- `ci`: Changes to CI configuration files and scripts
+- `chore`: Other changes that don't modify src or test files
+- `revert`: Reverts a previous commit
+
+### Examples
+
+```
+feat(auth): add ability to reset password
+
+fix(database): resolve connection timeout issue
+
+docs(readme): update installation instructions
+```
+
+This validation is enforced using commitlint with a pre-commit hook.
+
 ## Structure Discoverer Integration
 
 This project includes [spatie/php-structure-discoverer](https://github.com/spatie/php-structure-discoverer) for automatically discovering classes in the application.
