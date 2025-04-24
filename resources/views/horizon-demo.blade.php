@@ -4,70 +4,58 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Laravel Horizon Demo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Nunito', sans-serif;
-            background-color: #f8fafc;
-        }
-        .container {
-            max-width: 800px;
-            margin-top: 2rem;
-        }
-        .card {
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+    <!-- Include Tailwind via Vite -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body>
-    <div class="container">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h3 class="mb-0">Laravel Horizon Demo</h3>
+<body class="bg-gray-50 font-sans antialiased">
+    <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8 mt-8">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="bg-blue-600 px-6 py-4">
+                <h3 class="text-xl font-semibold text-white">Laravel Horizon Demo</h3>
             </div>
-            <div class="card-body">
+            <div class="p-6">
                 @if (session('status'))
-                    <div class="alert alert-success">
+                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
                         {{ session('status') }}
                     </div>
                 @endif
 
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">Dispatch Jobs</h5>
-                                <p class="card-text">Submit this form to dispatch example jobs to the queue for processing by Horizon.</p>
-                                <form action="{{ route('horizon.dispatch') }}" method="POST">
-                                    @csrf
-                                    <div class="mb-3">
-                                        <label for="count" class="form-label">Number of Jobs</label>
-                                        <input type="number" class="form-control" id="count" name="count" value="10" min="1" max="100">
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Dispatch Jobs</button>
-                                </form>
-                            </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white border rounded-lg shadow-sm h-full">
+                        <div class="p-5">
+                            <h5 class="text-lg font-medium mb-2">Dispatch Jobs</h5>
+                            <p class="text-gray-600 mb-4">Submit this form to dispatch example jobs to the queue for processing by Horizon.</p>
+                            <form action="{{ route('horizon.dispatch') }}" method="POST">
+                                @csrf
+                                <div class="mb-4">
+                                    <label for="count" class="block text-sm font-medium text-gray-700 mb-1">Number of Jobs</label>
+                                    <input type="number" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                                        id="count" name="count" value="10" min="1" max="100">
+                                </div>
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded shadow-sm">
+                                    Dispatch Jobs
+                                </button>
+                            </form>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">Horizon Dashboard</h5>
-                                <p class="card-text">Visit the Horizon dashboard to monitor queue processing, job metrics, and more.</p>
-                                <a href="{{ url('/horizon') }}" class="btn btn-success" target="_blank">Open Horizon Dashboard</a>
-                            </div>
+                    <div class="bg-white border rounded-lg shadow-sm h-full">
+                        <div class="p-5">
+                            <h5 class="text-lg font-medium mb-2">Horizon Dashboard</h5>
+                            <p class="text-gray-600 mb-4">Visit the Horizon dashboard to monitor queue processing, job metrics, and more.</p>
+                            <a href="{{ url('/horizon') }}" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded shadow-sm inline-block" target="_blank">
+                                Open Horizon Dashboard
+                            </a>
                         </div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">How it works</h5>
-                        <p>This demo dispatches <code>ExampleJob</code> instances to a Redis queue. The jobs are then processed by Laravel Horizon.</p>
-                        <p>Each job simulates work by sleeping for 2 seconds and then logging a message.</p>
-                        <p>Check the Horizon dashboard to see:</p>
-                        <ul>
+                <div class="bg-white border rounded-lg shadow-sm">
+                    <div class="p-5">
+                        <h5 class="text-lg font-medium mb-2">How it works</h5>
+                        <p class="mb-2">This demo dispatches <code class="bg-gray-100 px-1 py-0.5 rounded text-sm">ExampleJob</code> instances to a Redis queue. The jobs are then processed by Laravel Horizon.</p>
+                        <p class="mb-2">Each job simulates work by sleeping for 2 seconds and then logging a message.</p>
+                        <p class="mb-2">Check the Horizon dashboard to see:</p>
+                        <ul class="list-disc pl-5 text-gray-600">
                             <li>Real-time job processing metrics</li>
                             <li>Queue workload distribution</li>
                             <li>Failed jobs (if any)</li>
