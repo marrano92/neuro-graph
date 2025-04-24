@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# [ai-generated-code]
+
+# Determine the sail command (local or global installation)
+SAIL="$([ -f sail ] && echo 'bash sail' || echo 'bash vendor/bin/sail')"
+
+# Parse the command
+if [[ "$1" == "start" ]]; then
+    $SAIL artisan octane:start --server=swoole --host=0.0.0.0 --port=8000 --watch
+elif [[ "$1" == "stop" ]]; then
+    $SAIL artisan octane:stop
+elif [[ "$1" == "status" ]]; then
+    $SAIL artisan octane:status
+elif [[ "$1" == "reload" ]]; then
+    $SAIL artisan octane:reload
+else
+    echo "Usage: ./sail-octane [start|stop|status|reload]"
+    echo "  start   - Start Octane server with Swoole"
+    echo "  stop    - Stop running Octane server"
+    echo "  status  - Check Octane server status"
+    echo "  reload  - Reload Octane workers"
+fi 
