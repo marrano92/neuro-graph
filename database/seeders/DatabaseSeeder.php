@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Node;
-use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -14,20 +13,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create users
-        User::factory(10)->create();
+        $this->call([
+            ResetAndCreateAdminSeeder::class,
+        ]);
 
-        // Create nodes
-        $nodeTypes = ['text', 'image', 'file'];
-        
-        for ($i = 1; $i <= 15; $i++) {
-            Node::create([
-                'name' => 'Node ' . $i,
-                'type' => $nodeTypes[array_rand($nodeTypes)],
-                'content' => 'This is the content for node ' . $i . '. It contains some searchable text that will be indexed by Meilisearch.',
-            ]);
-        }
-        
         // Create specific nodes for better search testing
         Node::create([
             'name' => 'Meilisearch Documentation',
