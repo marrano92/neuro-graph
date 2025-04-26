@@ -36,6 +36,7 @@
         "color-convert": "^2.0.1",
         "color-name": "^1.1.4",
         "combined-stream": "^1.0.8",
+        "cytoscape": "^3.31.2",
         "delayed-stream": "^1.0.0",
         "detect-libc": "^2.0.4",
         "dunder-proto": "^1.0.1",
