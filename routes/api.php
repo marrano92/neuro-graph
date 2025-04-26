@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\NodeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -28,5 +29,19 @@ Route::prefix('auth')->group(function () {
     Route::middleware('auth:api')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('user', [AuthController::class, 'user']);
+    });
+});
+
+// Node Routes
+Route::prefix('nodes')->group(function () {
+    Route::get('/', [NodeController::class, 'index']);
+    Route::get('/{node}', [NodeController::class, 'show']);
+    Route::get('/{node}/similar', [NodeController::class, 'findSimilar']);
+    
+    // Protected routes
+    Route::middleware('auth:api')->group(function () {
+        Route::post('/', [NodeController::class, 'store']);
+        Route::put('/{node}', [NodeController::class, 'update']);
+        Route::delete('/{node}', [NodeController::class, 'destroy']);
     });
 }); 
