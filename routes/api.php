@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\NodeController;
+use App\Http\Controllers\ContentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -44,4 +45,16 @@ Route::prefix('nodes')->group(function () {
         Route::put('/{node}', [NodeController::class, 'update']);
         Route::delete('/{node}', [NodeController::class, 'destroy']);
     });
+});
+
+// Content routes
+Route::get('/contents', [ContentController::class, 'index']);
+Route::get('/contents/{content}', [ContentController::class, 'show']);
+
+Route::middleware('auth:api')->group(function () {
+    Route::post('/contents', [ContentController::class, 'store']);
+    Route::put('/contents/{content}', [ContentController::class, 'update']);
+    Route::delete('/contents/{content}', [ContentController::class, 'destroy']);
+    Route::post('/contents/{content}/nodes', [ContentController::class, 'addNodes']);
+    Route::delete('/contents/{content}/nodes', [ContentController::class, 'removeNodes']);
 }); 
