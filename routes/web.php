@@ -46,4 +46,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/users', [SearchController::class, 'searchUsers'])->name('search.users');
         Route::get('/nodes', [SearchController::class, 'searchNodes'])->name('search.nodes');
     });
+    
+    // Cytoscape.js Graph Demo
+    Route::get('/graph-demo', function () {
+        return view('graph-demo');
+    })->name('graph.demo');
 });
