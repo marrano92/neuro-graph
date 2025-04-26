@@ -56,4 +56,13 @@ class Node extends Model
     {
         return config('scout.enabled', true);
     }
+    
+    /**
+     * Get the content items associated with this node.
+     */
+    public function contents()
+    {
+        return $this->belongsToMany(Content::class, 'content_node')
+                    ->withTimestamps();
+    }
 } 
