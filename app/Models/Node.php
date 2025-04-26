@@ -16,9 +16,21 @@ class Node extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'label',
+        'description',
         'type',
-        'content',
+        'source',
+        'embedding',
+        'color',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'embedding' => 'array',
     ];
     
     /**
@@ -30,9 +42,10 @@ class Node extends Model
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
+            'label' => $this->label,
+            'description' => $this->description,
             'type' => $this->type,
-            'content' => $this->content,
+            'source' => $this->source,
         ];
     }
     
