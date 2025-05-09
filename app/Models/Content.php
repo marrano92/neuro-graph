@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Scout\Searchable;
 
 class Content extends Model
@@ -29,6 +30,14 @@ class Content extends Model
     {
         return $this->belongsToMany(Node::class, 'content_node')
                     ->withTimestamps();
+    }
+    
+    /**
+     * Get the transcript associated with this content.
+     */
+    public function transcript(): HasOne
+    {
+        return $this->hasOne(Transcript::class);
     }
     
     /**
