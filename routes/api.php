@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\NodeController;
 use App\Http\Controllers\ContentController;
+use App\Http\Controllers\ContentProcessorController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -57,4 +58,10 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/contents/{content}', [ContentController::class, 'destroy']);
     Route::post('/contents/{content}/nodes', [ContentController::class, 'addNodes']);
     Route::delete('/contents/{content}/nodes', [ContentController::class, 'removeNodes']);
+});
+
+// Content processor routes
+Route::prefix('processor')->group(function () {
+    Route::post('/process', [ContentProcessorController::class, 'process']);
+    Route::get('/status/{content}', [ContentProcessorController::class, 'status']);
 }); 

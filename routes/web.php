@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Auth\MagicLinkController;
+use App\Http\Controllers\ContentProcessorController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HorizonDemoController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\WebContentProcessorController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -51,4 +53,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/graph-demo', function () {
         return view('graph-demo');
     })->name('graph.demo');
+    
+    // Content Processor Routes
+    Route::prefix('content-processor')->group(function () {
+        Route::get('/', [WebContentProcessorController::class, 'index'])->name('content.processor');
+        Route::post('/process', [WebContentProcessorController::class, 'process'])->name('content.processor.process');
+        Route::get('/status/{content}', [WebContentProcessorController::class, 'status'])->name('content.processor.status');
+        Route::get('/list', [WebContentProcessorController::class, 'list'])->name('content.processor.list');
+    });
 });
