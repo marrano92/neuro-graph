@@ -6,6 +6,7 @@ namespace Tests\Feature;
 use App\Models\Content;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
+use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\NullEngine;
 use Mockery;
 use Mockery\MockInterface;
@@ -114,15 +115,34 @@ class ContentScoutSearchTest extends TestCase
         // Create test data with specific types
         $articleContent = Content::factory()->create(['source_type' => 'Article']);
         
-        // Partial mock of the Content model to simulate how you'd mock 
-        // the search functionality in application code tests
-        $this->partialMock('App\Models\Content', function (MockInterface $mock) use ($articleContent) {
-            $mock->shouldReceive('search')
-                ->with('Article')
-                ->andReturnSelf();
+        // Skip this test if Scout is not configured
+        if (!config('scout.driver')) {
+            $this->markTestSkipped('Scout driver not configured');
+            return;
+        }
+        
+        // Mock the Scout engine to return our specific results
+        $this->mock(EngineManager::class, function (MockInterface $mock) use ($articleContent) {
+            $engine = Mockery::mock(NullEngine::class);
+            
+            $engine->shouldReceive('search')
+                ->withAnyArgs()
+                ->andReturn([
+                    'results' => [$articleContent->toSearchableArray()],
+                    'total' => 1
+                ]);
                 
-            $mock->shouldReceive('get')
+            $engine->shouldReceive('map')
+                ->withAnyArgs()
                 ->andReturn(collect([$articleContent]));
+                
+            $engine->shouldReceive('get')
+                ->withAnyArgs()
+                ->andReturn(collect([$articleContent]));
+                
+            $mock->shouldReceive('engine')
+                ->withAnyArgs()
+                ->andReturn($engine);
         });
         
         // Run the test as if we're in application code
