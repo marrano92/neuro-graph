@@ -151,6 +151,7 @@
                 <ul>
                     <li><a href="{{ route('search.page') }}">Search</a></li>
                     <li><a href="{{ route('horizon.demo') }}">Horizon Demo</a></li>
+                    <li><a href="{{ route('content.processor') }}">Content Processor</a></li>
                 </ul>
             </div>
         </div>
