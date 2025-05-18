@@ -15,6 +15,7 @@
         "laravel/scout": "^10.8",
         "laravel/tinker": "^2.10.1",
         "meilisearch/meilisearch-php": "^1.7",
+        "openai-php/laravel": "^0.11.0",
         "spatie/php-structure-discoverer": "^2.3",
         "symfony/brevo-mailer": "*"
     },
