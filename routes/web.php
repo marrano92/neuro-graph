@@ -55,10 +55,8 @@ Route::middleware(['auth'])->group(function () {
     })->name('graph.demo');
     
     // Content Processor Routes
-    Route::prefix('content-processor')->group(function () {
-        Route::get('/', [WebContentProcessorController::class, 'index'])->name('content.processor');
-        Route::post('/process', [WebContentProcessorController::class, 'process'])->name('content.processor.process');
-        Route::get('/status/{content}', [WebContentProcessorController::class, 'status'])->name('content.processor.status');
-        Route::get('/list', [WebContentProcessorController::class, 'list'])->name('content.processor.list');
-    });
+    Route::get('/content-processor', [WebContentProcessorController::class, 'index'])->name('content.processor');
+    Route::post('/content-processor/process', [WebContentProcessorController::class, 'process'])->name('content.processor.process');
+    Route::get('/content-processor/status/{content}', [WebContentProcessorController::class, 'status'])->name('content.processor.status');
+    Route::get('/content-processor/list', [WebContentProcessorController::class, 'list'])->name('content.processor.list');
 });

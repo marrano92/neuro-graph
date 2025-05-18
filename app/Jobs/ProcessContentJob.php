@@ -16,6 +16,10 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * @deprecated This job is deprecated as of v1.x. Content processing now happens synchronously.
+ * This class is kept for backwards compatibility with any jobs still in the queue.
+ */
 class ProcessContentJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -45,6 +49,8 @@ class ProcessContentJob implements ShouldQueue
 
     /**
      * Execute the job.
+     * 
+     * @deprecated This method is only kept for backward compatibility.
      */
     public function handle(
         ContentProcessorService $contentProcessor,
@@ -91,15 +97,13 @@ class ProcessContentJob implements ShouldQueue
             
             $progressTracker->completeTracking($this->content, 'Content processed successfully');
         } catch (Exception $e) {
-            Log::error("Error processing content: " . $e->getMessage(), [
+            $progressTracker->failTracking($this->content, $e->getMessage());
+            
+            Log::error("Failed to process content: " . $e->getMessage(), [
                 'content_id' => $this->content->id,
-                'source_url' => $this->content->source_url
+                'exception' => get_class($e)
             ]);
             
-            // Mark tracking as failed with error message
-            $progressTracker->failTracking($this->content, "Processing failed: " . $e->getMessage());
-
-            // Rethrow to trigger job retry logic
             throw $e;
         }
     }

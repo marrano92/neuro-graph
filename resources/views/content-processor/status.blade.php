@@ -176,10 +176,7 @@
         }
     </style>
 
-    <!-- Refresh page every 15 seconds if status is 'pending' or 'processing' -->
-    @if (isset($progress['status']) && in_array($progress['status'], ['pending', 'processing']))
-        <meta http-equiv="refresh" content="15">
-    @endif
+    <!-- We don't need automatic refresh since we process content directly -->
 </head>
 <body>
     <div class="container">

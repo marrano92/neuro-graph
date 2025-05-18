@@ -55,7 +55,7 @@ class ContentProcessorApiTest extends TestCase
                 ])
                 ->assertJson([
                     'success' => true,
-                    'message' => 'Content queued for processing',
+                    'message' => 'Content processed successfully',
                     'data' => [
                         'source_type' => 'youtube',
                         'source_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'

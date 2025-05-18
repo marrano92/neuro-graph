@@ -190,7 +190,7 @@
                     <li>YouTube: <code>https://www.youtube.com/watch?v=dQw4w9WgXcQ</code></li>
                     <li>Article: <code>https://example.com/article</code></li>
                 </ul>
-                <p><strong>Note:</strong> Processing YouTube videos may take several minutes, especially for longer videos.</p>
+                <p><strong>Note:</strong> Processing content happens immediately and may take several minutes, especially for YouTube videos.</p>
             </div>
         </div>
     </div>
