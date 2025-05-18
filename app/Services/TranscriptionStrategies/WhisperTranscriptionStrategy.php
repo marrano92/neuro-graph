@@ -52,16 +52,12 @@ class WhisperTranscriptionStrategy extends AbstractTranscriptionStrategy
             $fetchDetailsCommand = new FetchVideoDetailsCommand();
             $mediaDetails = $fetchDetailsCommand->execute($sourceId, $platform);
             
-            // Update content title if available
-            if (isset($mediaDetails['title']) && !str_contains($mediaDetails['title'], $sourceId)) {
-                $content->title = $mediaDetails['title'];
-                $content->save();
-            }
-            
             // 4. Create transcript
             return $this->createTranscriptFromText($content, $transcriptionText, [
                 'source_type' => $platform . '_whisper',
-                'model' => 'whisper-1'
+                'model' => 'whisper-1',
+                'media_title' => $mediaDetails['title'] ?? null,
+                'media_duration' => $mediaDetails['duration'] ?? null
             ]);
         } catch (Exception $e) {
             Log::error("Whisper transcription failed: " . $e->getMessage(), [

@@ -10,6 +10,7 @@ use App\Services\ArticleProcessorService;
 use App\Services\ContentProcessingProgressTracker;
 use App\Services\ContentProcessorService;
 use App\Services\YoutubeTranscriptionService;
+use App\Services\SummaryGenerationService;
 use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -22,26 +23,38 @@ class ProcessContentJobTest extends TestCase
     
     protected Content $youtubeContent;
     protected Content $articleContent;
+    protected Content $unknownContent;
     protected ContentProcessorService $processorService;
     protected YoutubeTranscriptionService $youtubeService;
     protected ArticleProcessorService $articleService;
     protected ContentProcessingProgressTracker $progressTracker;
+    protected SummaryGenerationService $summaryService;
     
     protected function setUp(): void
     {
         parent::setUp();
         
-        // Create test contents
+        // Create mocks
+        $this->processorService = Mockery::mock(ContentProcessorService::class);
+        $this->youtubeService = Mockery::mock(YoutubeTranscriptionService::class);
+        $this->articleService = Mockery::mock(ArticleProcessorService::class);
+        $this->progressTracker = Mockery::mock(ContentProcessingProgressTracker::class);
+        $this->summaryService = Mockery::mock(SummaryGenerationService::class);
+        
+        // Create test content items
         $this->youtubeContent = Content::factory()->create([
-            'title' => 'Test YouTube Video',
             'source_type' => 'youtube',
-            'source_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+            'source_url' => 'https://www.youtube.com/watch?v=test123'
         ]);
         
         $this->articleContent = Content::factory()->create([
-            'title' => 'Test Article',
             'source_type' => 'article',
             'source_url' => 'https://example.com/test-article'
+        ]);
+        
+        $this->unknownContent = Content::factory()->create([
+            'source_type' => 'unknown',
+            'source_url' => 'https://example.com/unknown'
         ]);
     }
     

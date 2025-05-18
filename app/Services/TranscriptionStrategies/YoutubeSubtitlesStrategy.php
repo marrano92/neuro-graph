@@ -61,9 +61,8 @@ class YoutubeSubtitlesStrategy extends AbstractTranscriptionStrategy
                 return null;
             }
             
-            // Get video details and update content
+            // Get video details
             $videoDetails = $this->getVideoDetails($sourceId);
-            $this->updateContentTitle($content, $videoDetails, $sourceId);
             
             // Create transcript
             return $this->createTranscriptFromText($content, $subtitles, [
@@ -156,22 +155,6 @@ class YoutubeSubtitlesStrategy extends AbstractTranscriptionStrategy
     {
         $fetchDetailsCommand = new FetchVideoDetailsCommand();
         return $fetchDetailsCommand->execute($videoId, 'youtube');
-    }
-    
-    /**
-     * Update content title if available from video details
-     */
-    private function updateContentTitle(Content $content, array $videoDetails, string $sourceId): void
-    {
-        if (isset($videoDetails['title']) && $videoDetails['title'] !== "YouTube Video $sourceId") {
-            $content->title = $videoDetails['title'];
-            $content->save();
-            
-            Log::info('Content title updated from YouTube', [
-                'content_id' => $content->id,
-                'title' => $videoDetails['title']
-            ]);
-        }
     }
     
     /**

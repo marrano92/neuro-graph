@@ -55,16 +55,13 @@ class VimeoStrategy extends AbstractTranscriptionStrategy
             $fetchDetailsCommand = new FetchVideoDetailsCommand();
             $videoDetails = $fetchDetailsCommand->execute($vimeoId, 'vimeo');
             
-            // Update content title if available
-            if (isset($videoDetails['title']) && !str_contains($videoDetails['title'], $vimeoId)) {
-                $content->title = $videoDetails['title'];
-                $content->save();
-            }
-            
             // 4. Create transcript
             return $this->createTranscriptFromText($content, $transcriptionText, [
                 'source_type' => 'vimeo_whisper',
-                'model' => 'whisper-1'
+                'model' => 'whisper-1',
+                'video_title' => $videoDetails['title'] ?? null,
+                'video_duration' => $videoDetails['duration'] ?? null,
+                'video_author' => $videoDetails['author'] ?? null
             ]);
         } catch (Exception $e) {
             Log::error("Vimeo transcription failed: " . $e->getMessage(), [

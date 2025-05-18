@@ -15,13 +15,16 @@ class YoutubeTranscriptionService
 {
     protected TranscriptionStrategyManager $strategyManager;
     protected ContentProcessorService $processorService;
+    protected SummaryGenerationService $summaryService;
     
     public function __construct(
         ContentProcessorService $processorService, 
-        TranscriptionStrategyManager $strategyManager
+        TranscriptionStrategyManager $strategyManager,
+        SummaryGenerationService $summaryService
     ) {
         $this->processorService = $processorService;
         $this->strategyManager = $strategyManager;
+        $this->summaryService = $summaryService;
         
         // Configure the strategy manager
         $this->strategyManager->setContentProcessor($processorService);
@@ -60,6 +63,9 @@ class YoutubeTranscriptionService
                 throw new Exception("Invalid media URL: {$url}");
             }
             
+            // Get video details and update content title
+            $this->updateContentFromVideoDetails($content, $sourceId);
+            
             // Process with strategy manager
             $transcript = $this->strategyManager->processContent($content);
             
@@ -68,7 +74,11 @@ class YoutubeTranscriptionService
                     'content_id' => $content->id,
                     'url' => $url
                 ]);
+                return null;
             }
+            
+            // Generate and update summary
+            $this->generateAndUpdateSummary($content, $transcript);
             
             return $transcript;
         } catch (Exception $e) {
@@ -82,6 +92,78 @@ class YoutubeTranscriptionService
             
             return null;
         }
+    }
+    
+    /**
+     * Update content with video details (title, etc.)
+     */
+    protected function updateContentFromVideoDetails(Content $content, string $sourceId): void
+    {
+        try {
+            // Determine platform from URL
+            $platform = $this->determinePlatform($content->source_url);
+            
+            // Fetch video details
+            $fetchDetailsCommand = new Commands\FetchVideoDetailsCommand();
+            $videoDetails = $fetchDetailsCommand->execute($sourceId, $platform);
+            
+            // Update content title if available
+            if (isset($videoDetails['title']) && !str_contains($videoDetails['title'], $sourceId)) {
+                $content->title = $videoDetails['title'];
+                
+                Log::info('Content title updated from video details', [
+                    'content_id' => $content->id,
+                    'title' => $videoDetails['title'],
+                    'platform' => $platform
+                ]);
+            }
+            
+            // Save the updated content
+            $content->save();
+        } catch (Exception $e) {
+            Log::warning('Failed to update content from video details: ' . $e->getMessage(), [
+                'content_id' => $content->id,
+                'source_id' => $sourceId
+            ]);
+        }
+    }
+    
+    /**
+     * Generate and update content summary
+     */
+    protected function generateAndUpdateSummary(Content $content, Transcript $transcript): void
+    {
+        try {
+            $summary = $this->summaryService->generateSummary($content, $transcript);
+            
+            if ($summary) {
+                $content->summary = $summary;
+                $content->save();
+                
+                Log::info('Content summary updated', [
+                    'content_id' => $content->id,
+                    'summary_length' => strlen($summary)
+                ]);
+            }
+        } catch (Exception $e) {
+            Log::warning('Failed to generate summary: ' . $e->getMessage(), [
+                'content_id' => $content->id
+            ]);
+        }
+    }
+    
+    /**
+     * Determine the platform from URL
+     */
+    protected function determinePlatform(string $url): string
+    {
+        if (preg_match('/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/i', $url)) {
+            return 'youtube';
+        } elseif (preg_match('/^(https?:\/\/)?(www\.)?(vimeo\.com)\/.+$/i', $url)) {
+            return 'vimeo';
+        }
+        
+        return 'unknown';
     }
     
     /**

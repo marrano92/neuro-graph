@@ -6,6 +6,8 @@ namespace Tests\Unit;
 use App\Models\Content;
 use App\Models\Transcript;
 use App\Services\ContentProcessorService;
+use App\Services\SummaryGenerationService;
+use App\Services\TranscriptionStrategyManager;
 use App\Services\YoutubeTranscriptionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -18,6 +20,8 @@ class YoutubeTranscriptionServiceTest extends TestCase
     
     protected Content $content;
     protected ContentProcessorService $processorService;
+    protected TranscriptionStrategyManager $strategyManager;
+    protected SummaryGenerationService $summaryService;
     protected YoutubeTranscriptionService $transcriptionService;
     
     protected function setUp(): void
@@ -31,14 +35,24 @@ class YoutubeTranscriptionServiceTest extends TestCase
             'source_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
         ]);
         
-        // Create mock processor service
+        // Create mock services
         $this->processorService = Mockery::mock(ContentProcessorService::class);
         $this->processorService->shouldReceive('extractYoutubeId')
             ->with($this->content->source_url)
             ->andReturn('dQw4w9WgXcQ');
+            
+        $this->strategyManager = Mockery::mock(TranscriptionStrategyManager::class);
+        $this->strategyManager->shouldReceive('setContentProcessor')->byDefault();
+        $this->strategyManager->shouldReceive('addStrategy')->byDefault();
+        
+        $this->summaryService = Mockery::mock(SummaryGenerationService::class);
         
         // Create service with mock dependencies
-        $this->transcriptionService = new YoutubeTranscriptionService($this->processorService);
+        $this->transcriptionService = new YoutubeTranscriptionService(
+            $this->processorService,
+            $this->strategyManager,
+            $this->summaryService
+        );
     }
     
     protected function tearDown(): void
@@ -48,43 +62,38 @@ class YoutubeTranscriptionServiceTest extends TestCase
     }
     
     /**
-     * Test that we can create a transcript from text
-     * 
-     * This tests the basic functionality of creating transcript records
-     * without actually calling external APIs
+     * Test processing a video with successful transcription and summary generation
      */
-    public function test_can_create_transcript_from_text(): void
+    public function test_process_video_with_successful_transcription(): void
     {
-        // Use reflection to access protected method
-        $method = new \ReflectionMethod(YoutubeTranscriptionService::class, 'createTranscriptFromText');
-        $method->setAccessible(true);
+        // Create a transcript
+        $transcript = new Transcript();
+        $transcript->content_id = $this->content->id;
+        $transcript->full_text = 'Test transcript content';
+        $transcript->save();
         
-        $sampleText = <<<EOT
-This is a test transcript.
-It has multiple paragraphs.
-
-This is the second paragraph.
-It should be chunked properly.
-
-And here's a third paragraph for good measure.
-EOT;
+        // Mock strategy manager to return the transcript
+        $this->strategyManager->shouldReceive('processContent')
+            ->once()
+            ->with($this->content)
+            ->andReturn($transcript);
+            
+        // Mock the summary service
+        $this->summaryService->shouldReceive('generateSummary')
+            ->once()
+            ->with($this->content, $transcript)
+            ->andReturn('This is a test summary');
         
-        $transcript = $method->invoke($this->transcriptionService, $this->content, $sampleText);
+        // Call the method
+        $result = $this->transcriptionService->processVideo($this->content);
         
-        // Assert transcript was created correctly
-        $this->assertInstanceOf(Transcript::class, $transcript);
-        $this->assertEquals($this->content->id, $transcript->content_id);
-        $this->assertEquals($sampleText, $transcript->full_text);
-        $this->assertEquals('en', $transcript->language);
-        $this->assertEquals($this->content->source_url, $transcript->source_url);
-        $this->assertTrue($transcript->processed);
+        // Assert the result
+        $this->assertInstanceOf(Transcript::class, $result);
+        $this->assertEquals('Test transcript content', $result->full_text);
         
-        // Assert chunks were created
-        $this->assertGreaterThan(0, $transcript->chunks()->count());
-        
-        // Clean up
-        $transcript->chunks()->delete();
-        $transcript->delete();
+        // Refresh content from database and check if summary was updated
+        $this->content->refresh();
+        $this->assertEquals('This is a test summary', $this->content->summary);
     }
     
     /**
@@ -101,8 +110,15 @@ EOT;
         $mockProcessorService->shouldReceive('extractYoutubeId')
             ->with($invalidContent->source_url)
             ->andReturn(null);
+            
+        $mockStrategyManager = Mockery::mock(TranscriptionStrategyManager::class);
+        $mockSummaryService = Mockery::mock(SummaryGenerationService::class);
         
-        $service = new YoutubeTranscriptionService($mockProcessorService);
+        $service = new YoutubeTranscriptionService(
+            $mockProcessorService,
+            $mockStrategyManager,
+            $mockSummaryService
+        );
         
         // Process should return null for invalid URLs
         $result = $service->processVideo($invalidContent);
@@ -114,45 +130,84 @@ EOT;
     }
     
     /**
-     * Test that the chunking functionality works properly
+     * Test that processing works when no transcription strategy succeeds
      */
-    public function test_text_chunking(): void
+    public function test_process_video_handles_failed_transcription(): void
     {
-        // Use reflection to access protected method
-        $method = new \ReflectionMethod(YoutubeTranscriptionService::class, 'chunkText');
-        $method->setAccessible(true);
+        // Mock strategy manager to return null (no strategy succeeded)
+        $this->strategyManager->shouldReceive('processContent')
+            ->once()
+            ->with($this->content)
+            ->andReturn(null);
         
-        $sampleText = <<<EOT
-Paragraph one.
-
-Paragraph two.
-
-Paragraph three.
-EOT;
+        // Summary service should not be called
+        $this->summaryService->shouldNotReceive('generateSummary');
         
-        $chunks = $method->invoke($this->transcriptionService, $sampleText);
+        // Call the method
+        $result = $this->transcriptionService->processVideo($this->content);
         
-        $this->assertCount(3, $chunks);
-        $this->assertEquals('Paragraph one.', $chunks[0]['text']);
-        $this->assertEquals('Paragraph two.', $chunks[1]['text']);
-        $this->assertEquals('Paragraph three.', $chunks[2]['text']);
+        // Assert the result is null
+        $this->assertNull($result);
     }
     
     /**
-     * Test that token counting works approximately as expected
+     * Test that generateAndUpdateSummary works with successful summary generation
      */
-    public function test_token_counting(): void
+    public function test_generate_and_update_summary(): void
     {
+        // Create a transcript
+        $transcript = new Transcript();
+        $transcript->content_id = $this->content->id;
+        $transcript->full_text = 'Test transcript content for summary generation';
+        $transcript->save();
+        
+        // Mock the summary service to return a summary
+        $this->summaryService->shouldReceive('generateSummary')
+            ->once()
+            ->with($this->content, $transcript)
+            ->andReturn('This is a generated summary');
+        
         // Use reflection to access protected method
-        $method = new \ReflectionMethod(YoutubeTranscriptionService::class, 'countTokens');
+        $method = new \ReflectionMethod(YoutubeTranscriptionService::class, 'generateAndUpdateSummary');
         $method->setAccessible(true);
         
-        $text = "This is a test sentence with approximately 15 tokens.";
+        // Call the method
+        $method->invoke($this->transcriptionService, $this->content, $transcript);
         
-        $tokenCount = $method->invoke($this->transcriptionService, $text);
+        // Refresh content from database and check summary
+        $this->content->refresh();
+        $this->assertEquals('This is a generated summary', $this->content->summary);
+    }
+    
+    /**
+     * Test that updateContentFromVideoDetails updates the content title
+     */
+    public function test_update_content_from_video_details(): void
+    {
+        // Use the mock function to access commands/FetchVideoDetailsCommand
+        $this->mock('App\Services\Commands\FetchVideoDetailsCommand', function ($mock) {
+            $mock->shouldReceive('execute')
+                ->with('dQw4w9WgXcQ', 'youtube')
+                ->andReturn([
+                    'title' => 'Rick Astley - Never Gonna Give You Up',
+                    'duration' => 213,
+                    'author' => 'Rick Astley'
+                ]);
+        });
         
-        // Using the 4 characters ≈ 1 token approximation from the service
-        $this->assertGreaterThan(10, $tokenCount);
-        $this->assertLessThan(20, $tokenCount);
+        // Use reflection to access protected method
+        $method = new \ReflectionMethod(YoutubeTranscriptionService::class, 'updateContentFromVideoDetails');
+        $method->setAccessible(true);
+        
+        // Set content title to something else
+        $this->content->title = 'Original Title';
+        $this->content->save();
+        
+        // Call the method
+        $method->invoke($this->transcriptionService, $this->content, 'dQw4w9WgXcQ');
+        
+        // Refresh content from database and check title
+        $this->content->refresh();
+        $this->assertEquals('Rick Astley - Never Gonna Give You Up', $this->content->title);
     }
 } 
