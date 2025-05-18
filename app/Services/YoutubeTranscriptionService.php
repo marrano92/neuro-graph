@@ -42,11 +42,22 @@ class YoutubeTranscriptionService
     public function processVideo(Content $content): ?Transcript
     {
         try {
+            // Get the URL from the content
+            $url = $content->url ?? $content->source_url ?? null;
+            
+            if (!$url) {
+                Log::error("Missing URL in content", [
+                    'content_id' => $content->id,
+                    'content' => $content->toArray()
+                ]);
+                throw new Exception("Missing URL in content");
+            }
+            
             // Extract source ID from URL (supports YouTube, Vimeo, etc.)
-            $sourceId = $this->extractSourceId($content->source_url);
+            $sourceId = $this->extractSourceId($url);
             
             if (!$sourceId) {
-                throw new Exception("Invalid media URL: {$content->source_url}");
+                throw new Exception("Invalid media URL: {$url}");
             }
             
             // Process with strategy manager
@@ -55,7 +66,7 @@ class YoutubeTranscriptionService
             if (!$transcript) {
                 Log::warning("No transcription strategy succeeded", [
                     'content_id' => $content->id,
-                    'url' => $content->source_url
+                    'url' => $url
                 ]);
             }
             
@@ -63,7 +74,10 @@ class YoutubeTranscriptionService
         } catch (Exception $e) {
             Log::error("Failed to process media: " . $e->getMessage(), [
                 'content_id' => $content->id,
-                'url' => $content->source_url
+                'url' => $content->url ?? $content->source_url ?? 'unknown',
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
             ]);
             
             return null;
