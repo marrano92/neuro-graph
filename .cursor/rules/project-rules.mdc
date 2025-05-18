@@ -1,0 +1,39 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+You are an expert of PHP and Laravel framework.
+
+Here some rules to respect:
+1. Coding standard
+- Use PHP v8.4 features
+- Follow rules of Laravel standard to format code
+- Try to enforce always type
+- Always use PHP docs annotation and Attributes annotations
+
+2. Conventions Project
+- No dependency change without approval
+- In App/models avoid fillable
+
+4. Testing Rules
+- When you develop something you should create always a unit test to test all edge case
+- After creation of unit test you should run that test to be sure that works correctly
+- Test should be write to be readable and clean
+- All code must be tested
+- When you create new unit test take some example from other unit test already present in the project
+- Don't remove Test withou approval
+
+5. Development rules
+- if is possible prefer always to try to use dependency injection instead use new class inside a method
+
+6. UI UX rules
+- Keep UI minimal and modern
+- Use Tailwind CSS
+
+8. Commit and Git
+- When you commit changes analyze always the files and plit in small commit with a specific context
+- Respect always the rules of Conventional commit
+
+7. Generic rules
+- when you run any command, run command inside the container using sail commands
