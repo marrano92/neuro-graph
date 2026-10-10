@@ -1,163 +1,90 @@
-# Neuro Graph - Laravel 12 Project
+# Neuro Graph
 
-This is a Laravel 12 project with Docker using Laravel Sail and Laravel Octane.
+**An interactive tool that extracts key concepts from YouTube videos, articles and more — and maps them into a weighted semantic graph.** Connections are weighted by relevance and drawn with line thickness and numeric scores, so you can *see* how strongly ideas relate to each other.
 
-## Setup Instructions
+<!-- TODO: add a graph screenshot -->
 
-### Requirements
-- Docker
-- Docker Compose
+## What it does
 
-### Installation
-1. Clone the repository
-2. Run the following command to start the containers:
-   ```bash
-   ./vendor/bin/sail up -d
-   ```
-3. Run migrations:
-   ```bash
-   ./vendor/bin/sail artisan migrate
-   ```
+- **Extracts content** from YouTube videos (subtitle transcription via `yt-dlp` + `ffmpeg`), articles and other sources
+- **Builds a semantic graph**: nodes are concepts, edges are weighted by relevance, with scores you can inspect
+- **Search and content processing** exposed through a REST API with token auth (Laravel Passport)
+- Built for performance with **Laravel Octane (Swoole)** and containerized with **Docker / Laravel Sail**
 
-### YouTube Transcription Functionality
+## Stack
 
-This project includes functionality to extract subtitles from YouTube videos. It requires:
-- yt-dlp (YouTube downloader)
-- ffmpeg (for subtitle processing)
+`PHP 8.2+` · `Laravel 12` · `Laravel Octane (Swoole)` · `Docker / Laravel Sail` · `Laravel Passport` · `MySQL / SQLite` · `yt-dlp` · `ffmpeg`
 
-These dependencies are configured in the custom Dockerfile. The first time you run the project, you'll need to build the Docker image:
+## Quickstart
+
+Requirements: Docker and Docker Compose.
+
+```bash
+git clone https://github.com/marrano92/neuro-graph.git
+cd neuro-graph
+./vendor/bin/sail up -d
+./vendor/bin/sail artisan migrate
+```
+
+YouTube transcription needs `yt-dlp` and `ffmpeg`, already configured in the custom
+Dockerfile. On the first run, build the image:
 
 ```bash
 ./vendor/bin/sail build --no-cache
 ```
 
-### Useful Commands
-You can add this alias to your shell configuration for easier usage:
+Sail alias for everyday use:
+
 ```bash
 alias sail='[ -f sail ] && sh sail || sh vendor/bin/sail'
+sail up -d      # containers in background
+sail artisan    # artisan commands
+sail composer   # composer commands
 ```
 
-Then you can use:
-```bash
-sail up -d     # Start containers in background
-sail down      # Stop containers
-sail artisan   # Run artisan commands
-sail composer  # Run composer commands
-sail npm       # Run npm commands
-```
+## API
 
-## API Authentication with Laravel Passport
+Authentication endpoints (Laravel Passport):
 
-This project uses Laravel Passport for API authentication. The following endpoints are available:
+| Endpoint | Description |
+|---|---|
+| `POST /api/auth/register` | register a new user |
+| `POST /api/auth/login` | get an access token |
+| `POST /api/auth/logout` | revoke the token (auth required) |
+| `GET /api/auth/user` | current user (auth required) |
 
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login and get access token
-- `POST /api/auth/logout` - Logout (requires authentication)
-- `GET /api/auth/user` - Get authenticated user (requires authentication)
+A Postman collection ships in the repo (`postman_collection.json`): import it, set
+`base_url` and `auth_token`, and explore the API.
 
-### Testing API Endpoints
+## Email
 
-A Postman collection is included in the project root as `postman_collection.json`. You can import this into Postman to test the API endpoints.
+MailHog is the default mailer for development (captured at `http://localhost:8025`, nothing
+really sent). For real delivery either run `./setup-brevo.sh` (Brevo SMTP or API — see
+[docs/email/brevo-integration.md](docs/email/brevo-integration.md)) or configure Gmail SMTP in
+`.env`. Test the configuration with `./vendor/bin/sail artisan email:test`.
 
-To use the collection:
-1. Import the collection into Postman
-2. Set the `base_url` variable to your local development URL (e.g., `http://localhost`)
-3. Register or login to get an access token
-4. Set the `auth_token` variable to the token received from the register/login response
-5. Use the authenticated endpoints
-
-## Email Configuration
-
-The application is configured to use MailHog for email testing by default. MailHog intercepts emails and displays them in a web interface without actually sending them to recipients.
-
-### Default MailHog Configuration
-- Access the MailHog web interface at: http://localhost:8025
-- All emails are captured by MailHog and not delivered to actual recipients
-
-### Setting Up Real Email Delivery
-
-#### Option 1: Using Brevo (Formerly Sendinblue)
-
-The application includes a setup script for Brevo email service:
+## Octane
 
 ```bash
-./setup-brevo.sh
+./vendor/bin/sail composer dev-octane   # or: ./sail-octane start|stop|status|reload
 ```
 
-This script will guide you through configuring either:
-1. **Brevo SMTP**: Simple email delivery using Brevo's SMTP servers
-2. **Brevo API**: Advanced features using Brevo's API
+The app is served at `http://localhost:8000` with Octane, `http://localhost` with the
+standard web server.
 
-For detailed documentation about Brevo integration, see `docs/email/brevo-integration.md`.
-
-#### Option 2: Using Gmail SMTP
-
-For Gmail SMTP configuration:
+## Tests
 
 ```bash
-# Update your .env file with these settings
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=your.email@gmail.com
-MAIL_PASSWORD=your-app-password
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="your.email@gmail.com"
-MAIL_FROM_NAME="${APP_NAME}"
+./vendor/bin/sail artisan test
 ```
 
-You may need to generate an app password if you have 2FA enabled on your Gmail account.
+CI runs the suite on every push and pull request.
 
-### Testing Email Configuration
+## Contributing
 
-After setting up email, test it with:
+This project follows [Conventional Commits](https://www.conventionalcommits.org/) for commit
+messages.
 
-```bash
-./vendor/bin/sail artisan email:test
-```
+## License
 
-## Running with Laravel Octane
-
-This project is configured to use Laravel Octane with Swoole for improved performance. 
-To run the application with Octane:
-
-```bash
-./vendor/bin/sail composer dev-octane
-```
-
-Or if you're using the alias:
-
-```bash
-sail composer dev-octane
-```
-
-### Using the Octane helper script
-
-For easier management of Octane, you can use the provided helper script:
-
-```bash
-./sail-octane start    # Start Octane server with Swoole
-./sail-octane stop     # Stop running Octane server
-./sail-octane status   # Check Octane server status
-./sail-octane reload   # Reload Octane workers
-```
-
-The application will be available at http://localhost:8000 when running with Octane.
-
-## Development
-
-The application is available at http://localhost when running with the standard web server,
-or at http://localhost:8000 when running with Laravel Octane.
-
-Database credentials are in the .env file.
-
-## Conventional Commits
-
-This project follows the [Conventional Commits](https://www.conventionalcommits.org/) specification for commit messages. This helps to create an explicit commit history and automate versioning and release notes.
-
-### Commit Message Format
-
-Each commit message consists of a **header**, a **body**, and a **footer**:
-
-```
-<
+[MIT](LICENSE)
